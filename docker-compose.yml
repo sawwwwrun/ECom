@@ -1,0 +1,88 @@
+version: "3.8"
+
+services:
+  frontend:
+    build: ./front
+    ports:
+      - "3000:3000"
+    networks:
+      ecommerce_network:
+        ipv4_address: 172.20.0.6
+    environment:
+      - API_HOST=backend
+    depends_on:
+      - backend
+
+  backend:
+    build: ./back # Replace with your backend directory name
+    restart: on-failure:10
+    depends_on:
+      - mysql
+      - elasticsearch
+    ports:
+      - "4001:4000" # Expose Node.js server port
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=testDB
+      - ELASTICSEARCH_HOST=elasticsearch
+    networks:
+      ecommerce_network:
+        ipv4_address: 172.20.0.4
+    stdin_open: true
+    tty: true
+
+  mysql:
+    image: mysql:5.7
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=password # Set a strong password
+      - MYSQL_DATABASE=testDB
+    networks:
+      ecommerce_network:
+        ipv4_address: 172.20.0.3
+    volumes:
+      - my-datavolume:/var/lib/mysql
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200" # Expose Elasticsearch HTTP port (optional)
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data:rw
+    networks:
+      ecommerce_network:
+        ipv4_address: 172.20.0.5
+  
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.1
+    # environment:
+    #   - ELASTICSEARCH_HOSTS: '[http://elasticsearch:9200]'
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_USERNAME= # Clear any existing username
+      - ELASTICSEARCH_PASSWORD= # Clear any existing password
+    ports:
+      - "5601:5601" 
+    networks:
+      ecommerce_network:
+        ipv4_address: 172.20.0.7
+    volumes:
+      - kibana_data:/usr/share/kibana/data
+      - /home/saran/Documents/Task02/kibana.yml:/usr/share/kibana/config/kibana.yml:rw
+
+networks:
+  ecommerce_network:
+    external: true
+
+volumes:
+  esdata1:
+    driver: local
+  my-datavolume:
+  kibana_data:

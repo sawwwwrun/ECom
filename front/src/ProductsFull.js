@@ -41,7 +41,8 @@ function ProductsFull() {
 
   const fetchData = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:5000/Products/${id}`);
+      ///Category
+      const response = await axios.get(`http://${process.env.API_HOST? process.env.API_HOST : "localhost" }:4001/Products/${id}`);
       setData(response.data);
       setTotalPages(Math.ceil(data.length / itemsPerPage));
       setLoading(false);
@@ -89,7 +90,7 @@ function ProductsFull() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/Category`);
+      const response = await axios.get(`http://${process.env.API_HOST? process.env.API_HOST : "localhost" }:4001/Category`);
       setCategories(response.data);
     } catch (error) {
       console.error(error);
@@ -110,7 +111,7 @@ function ProductsFull() {
     try {
       setLoading(true);
       setPage(1);
-      const response = await axios.get(`http://localhost:5000/search?query=${searchQuery}&page=${page}`);
+      const response = await axios.get(`http://${process.env.API_HOST? process.env.API_HOST : "localhost" }:4001/search?query=${searchQuery}&page=${page}`);
       setSearchData(response.data);
       setTrueSearch(true);
       setLoading(false);

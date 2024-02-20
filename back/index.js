@@ -3,21 +3,29 @@ const { Client } = require("@elastic/elasticsearch");
 const mysql = require("mysql2");
 const compromise = require("compromise");
 const cors = require("cors");
-
+const fs = require('fs')
 const app = express();
 app.use(express.json());
 app.use(cors());
 
 const client = new Client({
-  node: "http://localhost:9200",
-  log: "info",
+  node: `http://${process.env.ELASTICSEARCH_HOST? process.env.ELASTICSEARCH_HOST : "localhost" }:9200`,
+  // auth: {
+  //       username: "elastic",
+  //       password: "tjsXLOv-+VGPhJVk35+b"
+  //   },
+  //   ssl: {
+  //     rejectUnauthorized: false // Set to false if using self-signed certificate
+  // }
+// Update Elasticsearch node to match the service name in docker-compose.yml
 });
+
 // MySQL database connection configuration
 const connection = mysql.createConnection({
-  host: "localhost",
-  user: "saran",
-  password: "Saran@2002",
-  database: "local_db", // Change this to your database name
+  host: process.env.MYSQL_HOST || "localhost", // Update MySQL host to match the service name in docker-compose.yml
+  user: process.env.MYSQL_USER || "saran", // Update MySQL user
+  password: process.env.MYSQL_PASSWORD || "Saran@2002", // Update MySQL password
+  database: process.env.MYSQL_DATABASE||"local_db", // Update MySQL database name
 });
 
 // Connect to MySQL
@@ -37,7 +45,6 @@ app.get("/Category", (req, res) => {
       res.status(500).send("Error fetching data from MySQL");
       return;
     }
-    // console.log(rows);
     res.json(rows);
   });
 });
@@ -87,6 +94,7 @@ app.get("/search", async (req, res) => {
                       multi_match: {
                         query: query,
                         fields: ["name^2", "brand^3","catName"],
+                        //type: "cross_fields" 
                       },
                     },
                   ],
@@ -102,7 +110,7 @@ app.get("/search", async (req, res) => {
         res.json(body?.hits?.hits);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: error.message ? error.message : "Es error" });
   }
 });
 
@@ -119,7 +127,7 @@ app.get("/Products/:id?", (req, res) => {
   });
 });
 
-const PORT = 5000;
+const PORT = 5000; // Update the port to match the exposed port in docker-compose.yml for the backend service
 app.listen(PORT, () => {
   console.log("Server is running on http://localhost:" + PORT);
 });

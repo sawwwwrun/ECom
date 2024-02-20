@@ -16,6 +16,11 @@ function Category() {
 
   useEffect(() => {
     fetchProduct();
+    const newUrl = "/Category/page=" + page
+    if (page) {
+      console.log(page)
+      window.history.pushState(null, "", newUrl);
+    }
   }, [page]);
 
   useEffect(() => {
@@ -24,7 +29,7 @@ function Category() {
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/Category');
+      const response = await axios.get(`http://${process.env.API_HOST? process.env.API_HOST : "localhost" }:4001/Category`);
       const { data } = response;
       const startIndex = (page - 1) * itemsPerPage;
       const slicedproduct = data.slice(startIndex, startIndex + itemsPerPage);
@@ -81,7 +86,7 @@ function Category() {
         </table>
       </div>
       <div className='pagination d-flex justify-content-center'>
-        <button className="btn btn-dark mr-1 pagination-btn" onClick={handlePrevPage} disabled={page === 1}>
+        <button className="btn btn-dark mr-1 pagination-btn" onClick={() => handlePrevPage()} disabled={page === 1}>
           Previous
         </button>
         {Array.from({ length: totalPages }, (_, index) => (
@@ -93,7 +98,7 @@ function Category() {
             {index + 1}
           </button>
         ))}
-        <button className="btn btn-dark pagination-btn" onClick={handleNextPage} disabled={page === totalPages}>
+        <button className="btn btn-dark pagination-btn" onClick={() => handleNextPage()} disabled={page === totalPages}>
           Next
         </button>
       </div>
